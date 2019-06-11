@@ -43,6 +43,7 @@ def main():
 	elif instruction1.type == 'C-instruction':
 		instruction1.convert()
 
+	print('Converted: ' + instruction1.getConverted())
 
 	#Closing the files
 	f.close()
@@ -56,16 +57,9 @@ class Instruction:
 		self.dest = False
 		self.line = line
 		self.converted = ''
-		#Dealing with white spaces 
-		while self.line.startswith((' ', '\t')):
-			self.concat()
-		while (self.line.find(' ') > -1):
-			self.line = self.line.replace(' ','')
 
-	def concat(self):
-		out = self.line[1:]
-		self.line = out
-		return out
+		#Dealing with white spaces 
+		self.line = removeWhiteSpace(self.line)
 
 	def defineType(self):
 		test = self.line
@@ -106,7 +100,7 @@ class Instruction:
 			converted = '111'
 			resultingBinary = self.dictSearch()
 			converted = converted+str(resultingBinary)
-			print(instructionEasyRead(converted))
+			#print(instructionEasyRead(converted))
 
 		else:
 			errormsg = 'Error in converting C-instruction'
@@ -142,23 +136,30 @@ class Instruction:
 				'D|M':'010101'
 			}
 
-		spliceThis = str(self.getLine)
-		print('Type:' + str(type(spliceThis)))
+		spliceThis = str(self.getLine())
 		destIndex = spliceThis.find('=')
 		if (destIndex > -1):
 			spliceThis = spliceThis[destIndex+1:]
-		print(spliceThis)
+		
+		
 		jumpIndex = spliceThis.find(';')
 		if(jumpIndex > -1):
 			spliceThis = spliceThis[:jumpIndex]
 
+
+		#Need to remove any whitespaces which might interfer with dictionary search
+		#Since i plan only to do this 
+		spliceThis = "".join(spliceThis.split())
 		if spliceThis in compCases:
+			self.converted = compCases[spliceThis]
 			return compCases[spliceThis]
 
 		else:
 			errormsg = 'error'
 			return errormsg
-		
+	
+
+	
 
 	def getLine(self):
 		return self.line
@@ -169,6 +170,10 @@ class Instruction:
 	def getConverted(self):
 		return self.converted
 
+
+def removeWhiteSpace(string):
+		string = "".join(string.split())
+		return string	
 
 def instructionEasyRead(string):
 	easyRead = string
