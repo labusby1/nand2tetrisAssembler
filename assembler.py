@@ -1,18 +1,23 @@
 import re
+import os
 
 def main():
 	#File name is formatted properly with .asm file type
+	directory = input('Enter directory location (blank for current): ')
+	if directory == '':
+		directory = os.getcwd()
+
 	inFile = input('Enter text file name:')
 	if inFile.endswith('.asm') == False:
 		inFile = inFile + '.asm'
-
+	inFile = directory +'/' + inFile
 	#Open the file accordingly
 	try:
 		f = open(inFile, 'r')
 	except: 
 		return print('File not found!')
 
-	f = open(inFile, 'r')
+
 	#Need to create a file to write the machine code if not already existing
 	#formatting output file name
 	outFile = inFile.rstrip('.asm') + 'MachineCode.hack'
@@ -20,13 +25,12 @@ def main():
 
 
 	for line in f:
-		print('\nLine to be read: ' + line)
+		print('Line to be read: ' + line)
 		instruction = Instruction(line)
 		instruction.defineType()
 		instruction.convert()
-		print('Line converted to binary: '+ instructionEasyRead(instruction.getConverted()))
-
-		if instruction.getConverted() != '':
+		if (instruction.getConverted() != ''):
+			print('Line converted to binary: '+ instructionEasyRead(instruction.getConverted()))
 			g.write(str(instruction.getConverted())+ '\n')
 		#delete the instruction from memory
 		del instruction
@@ -71,7 +75,7 @@ class Instruction:
 
 			codeLine = codeLine[atIndex + 1:]
 			intVal = int(codeLine)
-			print('integer value: ' + codeLine)
+			
 			#An A-insturction always starts with a zero
 			binaryEquate = '0'
 			for i in range(14, -1, -1):
@@ -92,7 +96,6 @@ class Instruction:
 			if resultingBinary == 'error':
 				self.converted = ''
 			else: 
-				print('resulting binary: '+ instructionEasyRead(resultingBinary))
 				self.converted = converted + resultingBinary
 			
 
