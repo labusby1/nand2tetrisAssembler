@@ -1,11 +1,10 @@
-from unittest.mock import patch
-from unittest import TestCase
+import re
 
 def main():
-	#File name is formatted propperly
+	#File name is formatted properly with .asm file type
 	inFile = input('Enter text file name:')
-	if inFile.endswith('.txt') == False:
-		inFile = inFile + '.txt'
+	if inFile.endswith('.asm') == False:
+		inFile = inFile + '.asm'
 
 	#Open the file accordingly
 	try:
@@ -16,33 +15,22 @@ def main():
 	f = open(inFile, 'r')
 	#Need to create a file to write the machine code if not already existing
 	#formatting output file name
-	outFile = inFile.rstrip('.txt') + 'MachineCode.txt'
+	outFile = inFile.rstrip('.asm') + 'MachineCode.hack'
 	g = open(outFile, 'w+')
 
 
+	for line in f:
+		print('\nLine to be read: ' + line)
+		instruction = Instruction(line)
+		instruction.defineType()
+		instruction.convert()
+		print('Line converted to binary: '+ instructionEasyRead(instruction.getConverted()))
 
-	#First we decide wether the line is an A or C instruction
-	#for line in 
-	line1 = f.readline()
-	print('Line to be read: ')
+		if instruction.getConverted() != '':
+			g.write(str(instruction.getConverted())+ '\n')
+		#delete the instruction from memory
+		del instruction
 	
-	instruction1 = Instruction(line1)
-	print(instruction1.getLine())
-	#We'll test for the type outside the class since we can then skip the rest if
-	#type is a comment.
-	instruction1.defineType()
-	print('instruction type: ' + instruction1.getType())
-	
-
-	#Next we can convert the isntruction into machine code
-	if instruction1.type == 'A-instruction':
-		instruction1.findBinary()
-		print(instructionEasyRead(instruction1.getConverted()))
-		#print(binaryVal)
-	elif instruction1.type == 'C-instruction':
-		instruction1.convert()
-
-	print('Converted: ' + instructionEasyRead(instruction1.getConverted()))
 
 	#Closing the files
 	f.close()
@@ -61,7 +49,7 @@ class Instruction:
 		self.line = removeWhiteSpace(self.line)
 
 	def defineType(self):
-		test = self.line
+		test = removeWhiteSpace(self.line)
 		if (test.startswith('//') or test.startswith('(')):
 			self.type = 'Comment'
 		elif test.startswith('@'):
@@ -77,9 +65,13 @@ class Instruction:
 		
 		if self.type == 'A-instruction':
 			#Here we remove the '@' symbol found before an a-instruction
-			#leaving hopefully an integer value (intVal)
-			intVal = self.line[1:]
-			intVal = int(intVal)
+
+			codeLine = self.line
+			atIndex = codeLine.find('@')
+
+			codeLine = codeLine[atIndex + 1:]
+			intVal = int(codeLine)
+			print('integer value: ' + codeLine)
 			#An A-insturction always starts with a zero
 			binaryEquate = '0'
 			for i in range(14, -1, -1):
@@ -88,7 +80,6 @@ class Instruction:
 					binaryEquate += '1'
 				else:
 					binaryEquate += '0'
-			self.converted = binaryEquate
 			return binaryEquate
 		else:
 			errormsg = 'Error in converting A-instruction'
@@ -97,43 +88,52 @@ class Instruction:
 	def convert(self):
 		if self.type == 'C-instruction':
 			converted = '111'
-			resultingBinary = self.dictSearch()
-			self.converted = converted+ resultingBinary
+			resultingBinary = str(self.dictSearch())
+			if resultingBinary == 'error':
+				self.converted = ''
+			else: 
+				print('resulting binary: '+ instructionEasyRead(resultingBinary))
+				self.converted = converted + resultingBinary
+			
 
+		elif self.type == 'A-instruction':
+			resultingBinary = self.findBinary()
+			self.converted = resultingBinary
 		else:
-			errormsg = 'Error in converting C-instruction'
+			self.converted = ''
+			
 
 	def dictSearch(self):
 		compCases = {
-				'1':'0111111',
-				'-1':'0111010',
-				'0':'0101010',
-				'A':'0110000',
-				'D':'0001100',
-				'!D':'0001101',
-				'!A':'0110001',
-				'-D':'0001111',
-				'-A':'0110011',
-				'D+1':'0011111',
-				'A+1':'0110111',
-				'D-1':'0001110',
-				'A-1':'0110010',
-				'D+A':'0000010',
-				'D-A':'0010011',
-				'A-D':'0010011',
-				'D&A':'0000000',
-				'D|A':'0010101',
-				'M':'1110000',
-				'!M':'1110001',
-				'-M':'1110011',
-				'M+1':'1110111',
-				'M-1':'1110010',
-				'D+M':'1000010',
-				'D-M':'1010011',
-				'M-D':'1000111',
-				'D|M':'1010101',
-				'D&M':'1000000'
-			}
+			'1':'0111111',
+			'-1':'0111010',
+			'0':'0101010',
+			'A':'0110000',
+			'D':'0001100',
+			'!D':'0001101',
+			'!A':'0110001',
+			'-D':'0001111',
+			'-A':'0110011',
+			'D+1':'0011111',
+			'A+1':'0110111',
+			'D-1':'0001110',
+			'A-1':'0110010',
+			'D+A':'0000010',
+			'D-A':'0010011',
+			'A-D':'0010011',
+			'D&A':'0000000',
+			'D|A':'0010101',
+			'M':'1110000',
+			'!M':'1110001',
+			'-M':'1110011',
+			'M+1':'1110111',
+			'M-1':'1110010',
+			'D+M':'1000010',
+			'D-M':'1010011',
+			'M-D':'1000111',
+			'D|M':'1010101',
+			'D&M':'1000000'
+		}
 
 		destCases = {
 			'M':'001',
@@ -172,8 +172,6 @@ class Instruction:
 			spliceJump = spliceComp[jumpIndex+1:]
 			spliceComp = spliceComp[:jumpIndex]
 			
-			print('here is spliceJump: '+ spliceJump)
-		
 		if spliceComp in compCases:
 			returnValue += compCases[spliceComp]
 
@@ -193,7 +191,6 @@ class Instruction:
 		else:
 			returnValue += '000' 
 
-		print('This is return value: ' + instructionEasyRead(returnValue))
 		return returnValue
 
 	def getLine(self):
