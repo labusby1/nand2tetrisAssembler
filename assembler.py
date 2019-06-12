@@ -10,9 +10,8 @@ def main():
 	#Open the file accordingly
 	try:
 		f = open(inFile, 'r')
-		contents = f.read()
 	except: 
-		print('File not found!')
+		return print('File not found!')
 
 	f = open(inFile, 'r')
 	#Need to create a file to write the machine code if not already existing
@@ -43,7 +42,7 @@ def main():
 	elif instruction1.type == 'C-instruction':
 		instruction1.convert()
 
-	print('Converted: ' + instruction1.getConverted())
+	print('Converted: ' + instructionEasyRead(instruction1.getConverted()))
 
 	#Closing the files
 	f.close()
@@ -99,67 +98,103 @@ class Instruction:
 		if self.type == 'C-instruction':
 			converted = '111'
 			resultingBinary = self.dictSearch()
-			converted = converted+str(resultingBinary)
-			#print(instructionEasyRead(converted))
+			self.converted = converted+ resultingBinary
 
 		else:
 			errormsg = 'Error in converting C-instruction'
 
 	def dictSearch(self):
 		compCases = {
-				'1':'111111',
-				'-1':'111010',
-				'0':'101010',
-				'A':'110000',
-				'D':'001100',
-				'!D':'001101',
-				'!A':'110001',
-				'-D':'001111',
-				'-A':'110011',
-				'D+1':'011111',
-				'A+1':'110111',
-				'D-1':'001110',
-				'A-1':'110010',
-				'D+A':'000010',
-				'D-A':'010011',
-				'A-D':'010011',
-				'D&A':'000000',
-				'D|A':'010101',
-				'M':'110000',
-				'!M':'110001',
-				'-M':'110011',
-				'M+1':'110111',
-				'M-1':'110010',
-				'D+M':'000010',
-				'D-M':'010011',
-				'M-D':'000111',
-				'D|M':'010101'
+				'1':'0111111',
+				'-1':'0111010',
+				'0':'0101010',
+				'A':'0110000',
+				'D':'0001100',
+				'!D':'0001101',
+				'!A':'0110001',
+				'-D':'0001111',
+				'-A':'0110011',
+				'D+1':'0011111',
+				'A+1':'0110111',
+				'D-1':'0001110',
+				'A-1':'0110010',
+				'D+A':'0000010',
+				'D-A':'0010011',
+				'A-D':'0010011',
+				'D&A':'0000000',
+				'D|A':'0010101',
+				'M':'1110000',
+				'!M':'1110001',
+				'-M':'1110011',
+				'M+1':'1110111',
+				'M-1':'1110010',
+				'D+M':'1000010',
+				'D-M':'1010011',
+				'M-D':'1000111',
+				'D|M':'1010101',
+				'D&M':'1000000'
 			}
 
-		spliceThis = str(self.getLine())
-		destIndex = spliceThis.find('=')
+		destCases = {
+			'M':'001',
+			'D':'010',
+			'MD':'011',
+			'A':'100',
+			'AM':'101',
+			'AD':'110',
+			'AMD':'111'
+		}
+
+		jumpCases = {
+			'JGT':'001',
+			'JEQ':'010',
+			'JGE':'011',
+			'JLT':'100',
+			'JNE':'101',
+			'JLE':'110',
+			'JMP':'111',
+		}
+
+		returnValue = ''
+
+		spliceComp = str(self.getLine())
+		spliceComp = removeWhiteSpace(spliceComp)
+		spliceDest = spliceComp
+		spliceJump = spliceComp
+		destIndex = spliceComp.find('=')
 		if (destIndex > -1):
-			spliceThis = spliceThis[destIndex+1:]
+			spliceComp = spliceComp[destIndex+1:]
+			spliceDest = spliceDest[:destIndex]
+			
 		
-		
-		jumpIndex = spliceThis.find(';')
+		jumpIndex = spliceComp.find(';')
 		if(jumpIndex > -1):
-			spliceThis = spliceThis[:jumpIndex]
-
-
-		#Need to remove any whitespaces which might interfer with dictionary search
-		#Since i plan only to do this 
-		spliceThis = "".join(spliceThis.split())
-		if spliceThis in compCases:
-			self.converted = compCases[spliceThis]
-			return compCases[spliceThis]
+			spliceJump = spliceComp[jumpIndex+1:]
+			spliceComp = spliceComp[:jumpIndex]
+			
+			print('here is spliceJump: '+ spliceJump)
+		
+		if spliceComp in compCases:
+			returnValue += compCases[spliceComp]
 
 		else:
 			errormsg = 'error'
 			return errormsg
-	
+		
+		if spliceDest in destCases:
+			returnValue += destCases[spliceDest]
 
-	
+		else:
+			returnValue += '000'
+
+		if spliceJump in jumpCases:
+			returnValue += jumpCases[spliceJump]
+
+		else:
+			returnValue += '000' 
+
+		print('This is return value: ' + instructionEasyRead(returnValue))
+		return returnValue
 
 	def getLine(self):
 		return self.line
@@ -172,8 +207,8 @@ class Instruction:
 
 
 def removeWhiteSpace(string):
-		string = "".join(string.split())
-		return string	
+	string = "".join(string.split())
+	return string
 
 def instructionEasyRead(string):
 	easyRead = string
@@ -183,4 +218,5 @@ def instructionEasyRead(string):
 		easyRead = easyRead[:i] + ' ' + easyRead[i:]
 		j += 1
 	return easyRead
+
 main()
