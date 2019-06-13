@@ -53,9 +53,14 @@ class Instruction:
 		self.line = removeWhiteSpace(self.line)
 
 	def defineType(self):
+		#A instruction means direct conversion to binary
+		#C instruction involves computation
+		#L instruction will be used for jumping around the code with JMP
 		test = removeWhiteSpace(self.line)
-		if (test.startswith('//') or test.startswith('(')):
+		if (test.startswith('//')):
 			self.type = 'Comment'
+		elif test.startswith('('):
+			self.type = 'L-instruction'
 		elif test.startswith('@'):
 			self.type = 'A-instruction'
 		else:
@@ -102,6 +107,9 @@ class Instruction:
 		elif self.type == 'A-instruction':
 			resultingBinary = self.findBinary()
 			self.converted = resultingBinary
+
+		#elif self.type == 'L-instruction':
+
 		else:
 			self.converted = ''
 			
